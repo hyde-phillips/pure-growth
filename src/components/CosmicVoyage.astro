@@ -1,0 +1,376 @@
+<div class="cosmic-voyage" data-cosmic-voyage>
+	<canvas class="voyage-canvas" aria-hidden="true"></canvas>
+	</div>
+	<div class="voyage-controls">
+		<p>CHOOSE YOUR FLIGHT</p>
+		<div class="flight-options" role="group" aria-label="Choose a cosmic fly-by">
+			<button type="button" data-voyage="black-hole" aria-pressed="true">01 <span>BLACK HOLE</span></button>
+			<button type="button" data-voyage="planet" aria-pressed="false">02 <span>PLANET FLY-BY</span></button>
+			<button type="button" data-voyage="sun" aria-pressed="false">03 <span>SOLAR FLARE</span></button>
+		</div>
+		<p class="flight-status" data-flight-status aria-live="polite">EVENT HORIZON · ACCRETION DISK</p>
+	</div>
+</div>
+
+<script>
+	import * as THREE from 'three';
+
+	const root = document.querySelector('[data-cosmic-voyage]');
+	const canvas = root?.querySelector('canvas');
+	const controls = document.querySelectorAll('[data-voyage]');
+	const status = document.querySelector('[data-flight-status]');
+
+	if (root instanceof HTMLElement && canvas instanceof HTMLCanvasElement) {
+		try {
+			const scene = new THREE.Scene();
+			scene.background = new THREE.Color('#080b12');
+			scene.fog = new THREE.FogExp2('#080b12', 0.025);
+
+			const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+			camera.position.set(0, 0, 9.5);
+
+			const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+			renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+			renderer.outputColorSpace = THREE.SRGBColorSpace;
+			renderer.setClearColor('#080b12', 1);
+			root.classList.add('is-ready');
+
+			const random = (() => {
+				let seed = 4701;
+				return () => {
+					seed = (seed * 16807) % 2147483647;
+					return (seed - 1) / 2147483646;
+				};
+			})();
+
+			const starPositions = new Float32Array(2100 * 3);
+			const starColors = new Float32Array(2100 * 3);
+			const starPalette = [new THREE.Color('#9bb9ff'), new THREE.Color('#fff3d0'), new THREE.Color('#f6a878')];
+			for (let index = 0; index < 2100; index += 1) {
+				starPositions[index * 3] = (random() - 0.5) * 40;
+				starPositions[index * 3 + 1] = (random() - 0.5) * 25;
+				starPositions[index * 3 + 2] = (random() - 0.5) * 24 - 4;
+				const color = starPalette[Math.floor(random() * starPalette.length)];
+				starColors[index * 3] = color.r;
+				starColors[index * 3 + 1] = color.g;
+				starColors[index * 3 + 2] = color.b;
+			}
+			const starGeometry = new THREE.BufferGeometry();
+			starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+			starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+			const stars = new THREE.Points(starGeometry, new THREE.PointsMaterial({ size: 0.025, vertexColors: true, transparent: true, opacity: 0.8, sizeAttenuation: true }));
+			scene.add(stars);
+
+			scene.add(new THREE.AmbientLight('#52647f', 1.2));
+			const keyLight = new THREE.DirectionalLight('#b8d9ff', 3.5);
+			keyLight.position.set(-4, 5, 7);
+			scene.add(keyLight);
+
+			function makeGlowTexture(innerColor, outerColor) {
+				const glowCanvas = document.createElement('canvas');
+				glowCanvas.width = 256;
+				glowCanvas.height = 256;
+				const context = glowCanvas.getContext('2d');
+				if (!context) return new THREE.Texture();
+				const gradient = context.createRadialGradient(128, 128, 4, 128, 128, 128);
+				gradient.addColorStop(0, innerColor);
+				gradient.addColorStop(0.2, `${innerColor}aa`);
+				gradient.addColorStop(0.48, `${outerColor}55`);
+				gradient.addColorStop(1, `${outerColor}00`);
+				context.fillStyle = gradient;
+				context.fillRect(0, 0, 256, 256);
+				const texture = new THREE.CanvasTexture(glowCanvas);
+				texture.colorSpace = THREE.SRGBColorSpace;
+				return texture;
+			}
+
+			const blackHole = new THREE.Group();
+			const diskMaterial = new THREE.ShaderMaterial({
+				transparent: true,
+				depthWrite: false,
+				side: THREE.DoubleSide,
+				blending: THREE.AdditiveBlending,
+				uniforms: { uTime: { value: 0 } },
+				vertexShader: `
+					varying vec2 vUv;
+					varying vec3 vPosition;
+					void main() {
+						vUv = uv;
+						vPosition = position;
+						gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+					}
+				`,
+				fragmentShader: `
+					uniform float uTime;
+					varying vec2 vUv;
+					varying vec3 vPosition;
+					void main() {
+						float radius = length(vPosition.xy);
+						float angle = atan(vPosition.y, vPosition.x);
+						float innerEdge = smoothstep(1.08, 1.36, radius);
+						float outerEdge = 1.0 - smoothstep(2.3, 2.62, radius);
+						float turbulence = 0.5 + 0.5 * sin(angle * 20.0 + radius * 13.0 - uTime * 2.2);
+						float bands = 0.65 + turbulence * 0.35;
+						float heat = clamp((2.45 - radius) * 0.62 + turbulence * 0.16, 0.0, 1.0);
+						vec3 cool = vec3(0.15, 0.42, 0.78);
+						vec3 hot = vec3(1.0, 0.36, 0.095);
+						vec3 color = mix(cool, hot, heat);
+						float alpha = innerEdge * outerEdge * bands * (0.3 + heat * 0.5);
+						gl_FragColor = vec4(color * (0.85 + turbulence * 0.6), alpha);
+					}
+				`,
+			});
+			const disk = new THREE.Mesh(new THREE.RingGeometry(1.16, 2.62, 180, 3), diskMaterial);
+			disk.rotation.x = 0.36;
+			blackHole.add(disk);
+			const photonRing = new THREE.Mesh(
+				new THREE.TorusGeometry(1.12, 0.025, 12, 180),
+				new THREE.MeshBasicMaterial({ color: '#ffb36c', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending }),
+			);
+			photonRing.rotation.x = 0.36;
+			blackHole.add(photonRing);
+			const eventHorizon = new THREE.Mesh(
+				new THREE.SphereGeometry(0.94, 48, 48),
+				new THREE.MeshBasicMaterial({ color: '#010205' }),
+			);
+			blackHole.add(eventHorizon);
+			const holeGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeGlowTexture('#6ab7ff', '#3d4dff'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.55 }));
+			holeGlow.scale.set(7, 7, 1);
+			blackHole.add(holeGlow);
+			scene.add(blackHole);
+
+			function makePlanetTexture() {
+				const textureCanvas = document.createElement('canvas');
+				textureCanvas.width = 1024;
+				textureCanvas.height = 512;
+				const context = textureCanvas.getContext('2d');
+				if (!context) return new THREE.Texture();
+				const ocean = context.createLinearGradient(0, 0, 800, 512);
+				ocean.addColorStop(0, '#0a2948');
+				ocean.addColorStop(0.5, '#166583');
+				ocean.addColorStop(1, '#092843');
+				context.fillStyle = ocean;
+				context.fillRect(0, 0, 1024, 512);
+				const landmasses = [
+					[[0.04, 0.25], [0.09, 0.17], [0.16, 0.14], [0.23, 0.17], [0.27, 0.24], [0.24, 0.3], [0.2, 0.35], [0.18, 0.43], [0.14, 0.39], [0.1, 0.34]],
+					[[0.23, 0.42], [0.29, 0.44], [0.31, 0.51], [0.29, 0.59], [0.27, 0.69], [0.23, 0.77], [0.21, 0.67], [0.22, 0.57], [0.2, 0.5]],
+					[[0.42, 0.19], [0.48, 0.15], [0.56, 0.17], [0.6, 0.21], [0.7, 0.19], [0.78, 0.23], [0.82, 0.3], [0.77, 0.36], [0.69, 0.34], [0.64, 0.39], [0.57, 0.36], [0.51, 0.4], [0.47, 0.34], [0.43, 0.29]],
+					[[0.48, 0.4], [0.53, 0.42], [0.56, 0.5], [0.54, 0.61], [0.5, 0.7], [0.46, 0.67], [0.44, 0.56], [0.45, 0.47]],
+					[[0.81, 0.57], [0.86, 0.55], [0.9, 0.6], [0.88, 0.66], [0.84, 0.67], [0.81, 0.63]],
+				];
+				const land = context.createLinearGradient(0, 80, 0, 460);
+				land.addColorStop(0, '#9ebc8e');
+				land.addColorStop(0.38, '#738d5e');
+				land.addColorStop(1, '#4b674e');
+				context.fillStyle = land;
+				for (const points of landmasses) {
+					context.beginPath();
+					points.forEach(([x, y], index) => {
+						if (index === 0) context.moveTo(x * 1024, y * 512);
+						else context.lineTo(x * 1024, y * 512);
+					});
+					context.closePath();
+					context.fill();
+				}
+				context.strokeStyle = 'rgba(220, 239, 230, 0.15)';
+				context.lineWidth = 7;
+				for (let band = 0; band < 22; band += 1) {
+					const y = random() * 512;
+					context.beginPath();
+					context.moveTo(0, y);
+					context.bezierCurveTo(320, y - 40 + random() * 80, 680, y + 40 - random() * 80, 1024, y - 10);
+					context.stroke();
+				}
+				const texture = new THREE.CanvasTexture(textureCanvas);
+				texture.colorSpace = THREE.SRGBColorSpace;
+				return texture;
+			}
+
+			const planet = new THREE.Group();
+			const planetBody = new THREE.Mesh(
+				new THREE.SphereGeometry(1.48, 72, 72),
+				new THREE.MeshStandardMaterial({ map: makePlanetTexture(), roughness: 0.88, metalness: 0.02 }),
+			);
+			planetBody.rotation.z = 0.12;
+			planet.add(planetBody);
+			const atmosphere = new THREE.Mesh(
+				new THREE.SphereGeometry(1.57, 64, 64),
+				new THREE.ShaderMaterial({
+					vertexShader: `
+						varying vec3 vNormal;
+						varying vec3 vPosition;
+						void main() {
+							vNormal = normalize(normalMatrix * normal);
+							vec4 modelPosition = modelViewMatrix * vec4(position, 1.0);
+							vPosition = modelPosition.xyz;
+							gl_Position = projectionMatrix * modelPosition;
+						}
+					`,
+					fragmentShader: `
+						varying vec3 vNormal;
+						varying vec3 vPosition;
+						void main() {
+							float rim = pow(1.0 - max(dot(normalize(vNormal), normalize(-vPosition)), 0.0), 3.0);
+							gl_FragColor = vec4(0.19, 0.62, 1.0, rim * 0.66);
+						}
+					`,
+					transparent: true,
+					depthWrite: false,
+					blending: THREE.AdditiveBlending,
+					side: THREE.BackSide,
+				}),
+			);
+			planet.add(atmosphere);
+			planet.position.set(1.05, -0.18, 0);
+			scene.add(planet);
+
+			const sun = new THREE.Group();
+			const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeGlowTexture('#fff7b5', '#ff421e'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.82 }));
+			sunGlow.scale.set(8, 8, 1);
+			sun.add(sunGlow);
+			const solarBody = new THREE.Mesh(
+				new THREE.SphereGeometry(1.34, 64, 64),
+				new THREE.MeshBasicMaterial({ color: '#ff9d36' }),
+			);
+			sun.add(solarBody);
+			const corona = new THREE.Mesh(
+				new THREE.TorusGeometry(1.4, 0.08, 16, 160),
+				new THREE.MeshBasicMaterial({ color: '#ffcf7a', transparent: true, opacity: 0.62, blending: THREE.AdditiveBlending, depthWrite: false }),
+			);
+			corona.rotation.x = 0.48;
+			sun.add(corona);
+			const flareMaterials = [];
+			const flareCurves = [
+				[new THREE.Vector3(-0.96, 0.82, 0.02), new THREE.Vector3(-1.2, 2.5, 0.14), new THREE.Vector3(0.85, 2.68, 0.1), new THREE.Vector3(1.08, 0.78, 0.02)],
+				[new THREE.Vector3(-0.65, -1.12, 0.05), new THREE.Vector3(-0.92, -2.5, 0.12), new THREE.Vector3(0.45, -2.7, 0.1), new THREE.Vector3(0.84, -1.0, 0.04)],
+				[new THREE.Vector3(0.97, 0.35, 0.05), new THREE.Vector3(2.2, 0.72, 0.15), new THREE.Vector3(2.38, -0.85, 0.15), new THREE.Vector3(1.02, -0.65, 0.04)],
+			];
+			flareCurves.forEach((points, index) => {
+				const curve = new THREE.CubicBezierCurve3(...points);
+				const flareMaterial = new THREE.MeshBasicMaterial({ color: index === 1 ? '#ff6638' : '#ffd18b', transparent: true, opacity: 0.74, blending: THREE.AdditiveBlending, depthWrite: false });
+				const flare = new THREE.Mesh(new THREE.TubeGeometry(curve, 56, index === 2 ? 0.018 : 0.024, 8, false), flareMaterial);
+				sun.add(flare);
+				flareMaterials.push(flareMaterial);
+			});
+			sun.position.set(0.78, 0.08, 0);
+			scene.add(sun);
+
+			const voyageScenes = {
+				'black-hole': { object: blackHole, label: 'EVENT HORIZON · ACCRETION DISK' },
+				planet: { object: planet, label: 'BLUE WORLD · ATMOSPHERIC FLY-BY' },
+				sun: { object: sun, label: 'SOLAR CORONA · MAGNETIC FLARE ARCS' },
+			};
+			let activeVoyage = 'black-hole';
+			let width = 0;
+			let height = 0;
+			let animationFrame = 0;
+			let lastFrame = 0;
+			let elapsed = 0;
+			const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			const pointer = new THREE.Vector2();
+			const pointerTarget = new THREE.Vector2();
+
+			function layoutScene() {
+				const bounds = root.getBoundingClientRect();
+				width = Math.max(1, bounds.width);
+				height = Math.max(1, bounds.height);
+				camera.aspect = width / height;
+				camera.position.x = 0;
+				camera.updateProjectionMatrix();
+				renderer.setSize(width, height, false);
+				const mobile = width < 680;
+				blackHole.position.set(mobile ? 0.58 : 2.05, 0.05, 0);
+				planet.position.set(mobile ? 0.82 : 2.05, -0.18, 0);
+				sun.position.set(mobile ? 0.8 : 2.05, 0.08, 0);
+				renderer.render(scene, camera);
+			}
+
+			function setVoyage(name) {
+				const selection = voyageScenes[name];
+				if (!selection) return;
+				activeVoyage = name;
+				Object.entries(voyageScenes).forEach(([key, entry]) => { entry.object.visible = key === name; });
+				controls?.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.voyage === name)));
+				if (status) status.textContent = selection.label;
+				if (reducedMotion) renderer.render(scene, camera);
+			}
+
+			controls?.forEach((button) => button.addEventListener('click', () => setVoyage(button.dataset.voyage || '')));
+			window.addEventListener('pointermove', (event) => {
+				const bounds = root.getBoundingClientRect();
+				pointerTarget.set(((event.clientX - bounds.left) / width - 0.5) * 2, ((event.clientY - bounds.top) / height - 0.5) * 2);
+			});
+			window.addEventListener('blur', () => pointerTarget.set(0, 0));
+			const resizeObserver = new ResizeObserver(layoutScene);
+			resizeObserver.observe(root);
+
+			function animate(now) {
+				animationFrame = 0;
+				if (document.hidden) return;
+				const delta = Math.min((now - (lastFrame || now)) / 1000, 0.04);
+				lastFrame = now;
+				elapsed += delta;
+				pointer.lerp(pointerTarget, 0.035);
+				camera.position.x += (pointer.x * 0.18 - camera.position.x) * 0.035;
+				camera.position.y += (-pointer.y * 0.1 - camera.position.y) * 0.035;
+				camera.lookAt(0, 0, 0);
+				stars.rotation.y = elapsed * 0.003;
+				blackHole.rotation.z = elapsed * 0.028;
+				diskMaterial.uniforms.uTime.value = elapsed;
+				planetBody.rotation.y = elapsed * 0.12;
+				planet.position.x = (width < 680 ? 0.82 : 2.05) + Math.sin(elapsed * 0.32) * 0.34;
+				sun.rotation.y = elapsed * 0.035;
+				flareMaterials.forEach((material, index) => { material.opacity = 0.54 + 0.27 * Math.sin(elapsed * 1.3 + index * 1.7); });
+				sunGlow.material.opacity = 0.68 + 0.16 * Math.sin(elapsed * 1.1);
+				renderer.render(scene, camera);
+				if (!reducedMotion) animationFrame = window.requestAnimationFrame(animate);
+			}
+
+			function startAnimation() {
+				if (!animationFrame && !reducedMotion) animationFrame = window.requestAnimationFrame(animate);
+			}
+
+			document.addEventListener('visibilitychange', () => {
+				if (document.hidden) {
+					window.cancelAnimationFrame(animationFrame);
+					animationFrame = 0;
+				} else {
+					lastFrame = 0;
+					if (!reducedMotion) startAnimation();
+					else renderer.render(scene, camera);
+				}
+			});
+			layoutScene();
+			setVoyage(activeVoyage);
+			if (reducedMotion) renderer.render(scene, camera);
+			else startAnimation();
+		} catch (error) {
+			console.error('Unable to start the cosmic fly-by scene.', error);
+			root.classList.add('is-fallback');
+		}
+	}
+</script>
+
+<style>
+	.cosmic-voyage { position: absolute; z-index: -2; inset: 0; overflow: hidden; background: #080b12; pointer-events: none; }
+	.voyage-canvas { display: block; width: 100%; height: 100%; }
+	.voyage-controls { position: absolute; z-index: 2; right: 8vw; bottom: 62px; display: grid; justify-items: end; gap: 11px; color: var(--paper); }
+	.voyage-controls > p { margin: 0; color: #a9b7c2; font: 500 8px/1 var(--font-sans); letter-spacing: 1.6px; }
+	.flight-options { display: flex; gap: 8px; }
+	.flight-options button { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 11px; border: 1px solid rgb(213 226 235 / 25%); border-radius: 2px; background: rgb(8 11 18 / 42%); color: #c1cbd1; cursor: pointer; font: 500 8px/1 var(--font-sans); letter-spacing: 1px; transition: color 160ms ease, border-color 160ms ease, background 160ms ease; }
+	.flight-options button:hover, .flight-options button[aria-pressed="true"] { border-color: var(--lime); background: rgb(217 235 146 / 9%); color: var(--paper); }
+	.flight-options button[aria-pressed="true"]::before { width: 5px; height: 5px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); content: ''; }
+	.flight-options button[aria-pressed="true"] { padding-left: 8px; }
+	.flight-options button span { color: var(--lime); }
+	.flight-status { margin: 0; color: #a9b7c2; font: 500 7px/1 var(--font-sans); letter-spacing: 1.3px; }
+	.cosmic-voyage.is-fallback { background: radial-gradient(ellipse at 73% 48%, #a95b24 0%, #402840 20%, #10121c 60%, #080b12 100%); }
+	.cosmic-voyage.is-fallback .voyage-canvas { display: none; }
+	@media (max-width: 680px) {
+		.voyage-controls { right: 7vw; bottom: 66px; left: 7vw; justify-items: start; gap: 9px; }
+		.flight-options { width: 100%; gap: 6px; }
+		.flight-options button { min-height: 33px; flex: 1; justify-content: center; gap: 5px; padding: 0 5px; font-size: 7px; letter-spacing: 0.5px; }
+		.flight-options button[aria-pressed="true"] { padding-left: 5px; }
+		.flight-options button[aria-pressed="true"]::before { width: 4px; height: 4px; }
+		.flight-status { font-size: 6px; }
+	}
+</style>

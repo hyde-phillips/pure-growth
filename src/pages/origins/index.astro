@@ -1,12 +1,12 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import CosmicVoyage from '../../components/CosmicVoyage.astro';
 import { chapters } from '../../data/origins.js';
-
-const openingChapter = chapters[0];
 ---
 
 <SiteLayout title="Cosmic origins — Farther" description="A four-part journey from the early universe to our small blue world.">
-	<section class="origin-intro" style={`--origin-image: url(https://images.unsplash.com/${openingChapter.image}?auto=format&fit=crop&w=2400&q=85)`}>
+	<section class="origin-intro">
+		<CosmicVoyage />
 		<div class="intro-shade"></div>
 		<div class="intro-copy">
 			<p class="eyebrow"><span class="eyebrow-dot"></span> A JOURNEY THROUGH DEEP TIME</p>
@@ -83,8 +83,8 @@ const openingChapter = chapters[0];
 </SiteLayout>
 
 <style>
-	.origin-intro { position: relative; isolation: isolate; display: flex; min-height: min(740px, calc(100svh - 70px)); align-items: center; overflow: hidden; background: #151a18 var(--origin-image) center 48% / cover no-repeat; }
-	.intro-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgb(12 16 14 / 86%) 0%, rgb(12 16 14 / 48%) 48%, rgb(12 16 14 / 5%) 100%), linear-gradient(0deg, #101311 0%, transparent 28%, rgb(10 14 12 / 24%) 100%); }
+	.origin-intro { position: relative; isolation: isolate; display: flex; min-height: min(740px, calc(100svh - 70px)); align-items: center; overflow: hidden; background: #080b12; }
+	.intro-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgb(8 11 18 / 90%) 0%, rgb(8 11 18 / 62%) 38%, rgb(8 11 18 / 8%) 100%), linear-gradient(0deg, #101311 0%, transparent 23%, transparent 78%, rgb(8 11 18 / 24%) 100%); pointer-events: none; }
 	.intro-copy { width: min(1200px, 100%); margin: auto; padding: 82px 8vw 106px; animation: arrive 800ms both; }
 	.eyebrow { display: flex; align-items: center; gap: 10px; color: #d2d8d1; font: 500 10px/1.4 var(--font-sans); letter-spacing: 2px; }
 	.eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 13px var(--lime); }
@@ -132,7 +132,7 @@ const openingChapter = chapters[0];
 	@keyframes arrive { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 	@media (max-width: 680px) {
 		.origin-intro { min-height: min(730px, calc(100svh - 62px)); align-items: flex-start; background-position: 60% center; }
-		.intro-shade { background: linear-gradient(90deg, rgb(12 16 14 / 78%), rgb(12 16 14 / 25%)), linear-gradient(0deg, #101311 0%, transparent 30%, rgb(10 14 12 / 25%) 100%); }
+		.intro-shade { background: linear-gradient(90deg, rgb(8 11 18 / 80%), rgb(8 11 18 / 31%)), linear-gradient(0deg, #101311 0%, transparent 28%, rgb(8 11 18 / 25%) 100%); }
 		.intro-copy { padding: 100px 7vw 110px; }
 		.intro-date { margin-top: 70px; }
 		h1 { font-size: clamp(64px, 15vw, 88px); }
