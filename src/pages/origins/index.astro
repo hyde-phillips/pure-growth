@@ -1,0 +1,147 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { chapters } from '../../data/origins.js';
+
+const openingChapter = chapters[0];
+---
+
+<SiteLayout title="Cosmic origins — Farther" description="A four-part journey from the early universe to our small blue world.">
+	<section class="origin-intro" style={`--origin-image: url(https://images.unsplash.com/${openingChapter.image}?auto=format&fit=crop&w=2400&q=85)`}>
+		<div class="intro-shade"></div>
+		<div class="intro-copy">
+			<p class="eyebrow"><span class="eyebrow-dot"></span> A JOURNEY THROUGH DEEP TIME</p>
+			<p class="intro-date">FROM THE FIRST MOMENTS TO HERE</p>
+			<h1>Before us,<br /><em>everything.</em></h1>
+			<p class="intro-lede">A universe expands. Light finds a way. Stars make new elements. One small world becomes a place that can look up and ask how it all began.</p>
+			<a class="text-link" href="#timeline">Follow the thread <span aria-hidden="true">↘</span></a>
+		</div>
+		<div class="intro-caption">13.8 BILLION YEARS · ONE CONTINUOUS STORY</div>
+	</section>
+
+	<section class="timeline-section" id="timeline">
+		<div class="timeline-heading">
+			<div>
+				<p class="eyebrow section-eyebrow">FOUR MOMENTS IN DEEP TIME</p>
+				<h2>How we got<br /><em>from there to here.</em></h2>
+			</div>
+			<p class="timeline-aside">The distances are almost impossible to picture.<br />The evidence is written in the sky, and in us.</p>
+		</div>
+
+		<div class="time-explorer" aria-live="polite">
+			<div class="time-display">
+				<span class="time-overline">YOU ARE TRAVELLING TO</span>
+				<output class="time-epoch" data-epoch>{chapters[0].epoch}</output>
+				<p class="time-summary" data-summary>{chapters[0].teaser}</p>
+				<a class="text-link time-link" data-link href={`/origins/${chapters[0].slug}`}>Enter this moment <span aria-hidden="true">↗</span></a>
+			</div>
+			<div class="time-control">
+				<div class="time-markers" aria-hidden="true"><span>EARLIEST</span><span>OUR HOME</span></div>
+				<input type="range" min="0" max={chapters.length - 1} value="0" step="1" aria-label="Choose a moment in the story of the universe" data-slider />
+				<div class="time-ticks" aria-hidden="true">
+					{chapters.map((chapter, index) => <a href={`/origins/${chapter.slug}`} data-tick={index} class:list={{ selected: index === 0 }} tabindex="-1">{chapter.number}</a>)}
+				</div>
+			</div>
+		</div>
+
+		<div class="chapter-list">
+			{chapters.map((chapter) => (
+				<a class="chapter-row" href={`/origins/${chapter.slug}`}>
+					<span class="chapter-number">{chapter.number}</span>
+					<span class="chapter-copy">
+						<span class="chapter-epoch">{chapter.epoch}</span>
+						<strong>{chapter.shortTitle}</strong>
+						<span>{chapter.teaser}</span>
+					</span>
+					<span class="chapter-arrow" aria-hidden="true">↗</span>
+				</a>
+			))}
+		</div>
+	</section>
+
+	<section class="origin-afterword">
+		<p class="afterword-star" aria-hidden="true">✳</p>
+		<p>Not outside the universe.<br />A part of it, <em>looking back.</em></p>
+		<span>THE STORY CONTINUES EVERY TIME WE ASK A QUESTION</span>
+	</section>
+
+	<script define:vars={{ chapters }}>
+		const slider = document.querySelector('[data-slider]');
+		const epoch = document.querySelector('[data-epoch]');
+		const summary = document.querySelector('[data-summary]');
+		const link = document.querySelector('[data-link]');
+		const ticks = document.querySelectorAll('[data-tick]');
+
+		slider?.addEventListener('input', () => {
+			const chapter = chapters[Number(slider.value)];
+			if (!chapter || !epoch || !summary || !link) return;
+			epoch.textContent = chapter.epoch;
+			summary.textContent = chapter.teaser;
+			link.href = `/origins/${chapter.slug}`;
+			ticks.forEach((tick) => tick.classList.toggle('selected', Number(tick.dataset.tick) === Number(slider.value)));
+		});
+	</script>
+</SiteLayout>
+
+<style>
+	.origin-intro { position: relative; isolation: isolate; display: flex; min-height: min(740px, calc(100svh - 70px)); align-items: center; overflow: hidden; background: #151a18 var(--origin-image) center 48% / cover no-repeat; }
+	.intro-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgb(12 16 14 / 86%) 0%, rgb(12 16 14 / 48%) 48%, rgb(12 16 14 / 5%) 100%), linear-gradient(0deg, #101311 0%, transparent 28%, rgb(10 14 12 / 24%) 100%); }
+	.intro-copy { width: min(1200px, 100%); margin: auto; padding: 82px 8vw 106px; animation: arrive 800ms both; }
+	.eyebrow { display: flex; align-items: center; gap: 10px; color: #d2d8d1; font: 500 10px/1.4 var(--font-sans); letter-spacing: 2px; }
+	.eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 13px var(--lime); }
+	.intro-date { margin: 61px 0 13px; color: var(--lime); font: 500 9px/1.4 var(--font-sans); letter-spacing: 1.8px; }
+	h1, h2, p { margin-top: 0; }
+	h1 { margin-bottom: 21px; color: var(--paper); font: 400 clamp(64px, 8vw, 108px)/.91 var(--font-serif); }
+	h1 em, h2 em, .origin-afterword em { color: var(--lime); font-weight: 400; }
+	.intro-lede { max-width: 420px; margin-bottom: 25px; color: #c2c8c1; font: 300 14px/1.8 var(--font-sans); }
+	.text-link { display: inline-flex; align-items: center; gap: 14px; color: #f0f0e9; font: 500 11px/1 var(--font-sans); text-decoration: none; }
+	.text-link span { color: var(--lime); font-size: 16px; transition: transform 180ms ease; }
+	.text-link:hover span { transform: translate(3px, 2px); }
+	.intro-caption { position: absolute; right: 8vw; bottom: 35px; color: #d2d8d1; font: 500 8px/1 var(--font-sans); letter-spacing: 1.5px; }
+	.timeline-section { max-width: 1200px; margin: auto; padding: 108px 8vw 120px; }
+	.timeline-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 52px; }
+	.section-eyebrow { margin-bottom: 20px; color: var(--lime); }
+	h2 { margin-bottom: 0; color: var(--paper); font: 400 clamp(42px, 5vw, 64px)/1.02 var(--font-serif); }
+	.timeline-aside { margin: 0 3% 5px 20px; color: #a4ada5; font: 300 12px/1.8 var(--font-sans); }
+	.time-explorer { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: end; padding: 34px 0 36px; border-top: 1px solid #454c45; border-bottom: 1px solid #343a34; }
+	.time-overline { display: block; margin-bottom: 13px; color: #9ba59b; font: 500 8px/1 var(--font-sans); letter-spacing: 1.5px; }
+	.time-epoch { display: block; color: var(--lime); font: 500 9px/1.5 var(--font-sans); letter-spacing: 1.2px; }
+	.time-summary { max-width: 390px; margin: 9px 0 15px; color: #aeb7ae; font: 300 12px/1.8 var(--font-sans); }
+	.time-link { color: var(--paper); font-size: 10px; }
+	.time-control { padding-bottom: 3px; }
+	.time-markers { display: flex; justify-content: space-between; margin-bottom: 13px; color: #929c93; font: 500 8px/1 var(--font-sans); letter-spacing: 1.2px; }
+	.time-control input { width: 100%; height: 3px; margin: 0; appearance: none; background: linear-gradient(90deg, var(--lime), #626c56); cursor: pointer; }
+	.time-control input::-webkit-slider-thumb { width: 15px; height: 15px; appearance: none; border: 2px solid var(--ink); border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 1px var(--lime), 0 0 14px rgb(217 235 146 / 45%); }
+	.time-control input::-moz-range-thumb { width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 1px var(--lime), 0 0 14px rgb(217 235 146 / 45%); }
+	.time-control input:focus-visible { outline: 2px solid var(--paper); outline-offset: 8px; }
+	.time-ticks { display: flex; justify-content: space-between; margin-top: 13px; }
+	.time-ticks a { color: #778177; font: 500 8px/1 var(--font-sans); text-decoration: none; }
+	.time-ticks a.selected { color: var(--lime); }
+	.chapter-row { display: grid; grid-template-columns: 44px 1fr 24px; gap: 20px; align-items: center; min-height: 128px; padding: 23px 0; border-bottom: 1px solid #343a34; text-decoration: none; transition: padding 180ms ease, border-color 180ms ease; }
+	.chapter-row:hover { padding-right: 7px; padding-left: 7px; border-color: #778177; }
+	.chapter-number { align-self: start; padding-top: 4px; color: var(--lime); font: 500 9px/1 var(--font-sans); letter-spacing: 1px; }
+	.chapter-copy { display: grid; gap: 8px; }
+	.chapter-epoch { color: #9ba59b; font: 500 8px/1 var(--font-sans); letter-spacing: 1.4px; }
+	.chapter-copy strong { color: var(--paper); font: 400 25px/1.15 var(--font-serif); }
+	.chapter-copy > span:last-child { max-width: 540px; color: #a4ada5; font: 300 11px/1.7 var(--font-sans); }
+	.chapter-arrow { color: var(--lime); font-size: 17px; transition: transform 180ms ease; }
+	.chapter-row:hover .chapter-arrow { transform: translate(3px, -3px); }
+	.origin-afterword { display: flex; min-height: 260px; flex-direction: column; align-items: center; justify-content: center; padding: 55px 24px; border-top: 1px solid #343a34; background: #151a17; text-align: center; }
+	.afterword-star { margin-bottom: 12px; color: var(--lime); font-size: 18px; }
+	.origin-afterword > p:nth-child(2) { margin-bottom: 19px; color: var(--paper); font: 400 clamp(27px, 4vw, 43px)/1.15 var(--font-serif); }
+	.origin-afterword > span { color: #9ba59b; font: 500 8px/1.5 var(--font-sans); letter-spacing: 1.5px; }
+	@keyframes arrive { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+	@media (max-width: 680px) {
+		.origin-intro { min-height: min(730px, calc(100svh - 62px)); align-items: flex-start; background-position: 60% center; }
+		.intro-shade { background: linear-gradient(90deg, rgb(12 16 14 / 78%), rgb(12 16 14 / 25%)), linear-gradient(0deg, #101311 0%, transparent 30%, rgb(10 14 12 / 25%) 100%); }
+		.intro-copy { padding: 100px 7vw 110px; }
+		.intro-date { margin-top: 70px; }
+		h1 { font-size: clamp(64px, 15vw, 88px); }
+		.intro-caption { right: 7vw; bottom: 29px; font-size: 7px; }
+		.timeline-section { padding: 82px 7vw 90px; }
+		.timeline-heading { align-items: flex-start; flex-direction: column; gap: 20px; margin-bottom: 36px; }
+		.timeline-aside { margin-left: 0; }
+		.time-explorer { grid-template-columns: 1fr; gap: 27px; padding: 25px 0 28px; }
+		.chapter-row { grid-template-columns: 25px 1fr 19px; gap: 12px; min-height: 132px; }
+		.chapter-copy strong { font-size: 22px; }
+	}
+</style>

@@ -1,0 +1,196 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const destinations = [
+	{
+		name: 'Europa',
+		tag: 'JUPITER SYSTEM · 628 MILLION KM',
+		kind: 'OCEAN MOON',
+		description: 'An entire ocean, hidden beneath a world of ice. Come for the strange blue light. Stay for the silence.',
+		image: 'photo-1462331940025-496dfbfc7564',
+		travel: '03 MONTHS',
+		temperature: '−160°C',
+	},
+	{
+		name: 'Titan',
+		tag: 'SATURN SYSTEM · 1.2 BILLION KM',
+		kind: 'METHANE SEAS',
+		description: 'Where rain falls in slow motion and lakes run black. The most familiar alien world you’ll ever visit.',
+		image: 'photo-1534796636912-3b95b3ab5986',
+		travel: '07 MONTHS',
+		temperature: '−179°C',
+	},
+	{
+		name: 'Kepler-186f',
+		tag: 'CYGNUS · 557 LIGHT YEARS',
+		kind: 'DISTANT FRONTIER',
+		description: 'A red sun on the horizon. A rocky shoreline underfoot. For a moment, a world that feels like ours.',
+		image: 'photo-1419242902214-272b3f66ee7a',
+		travel: '14 YEARS',
+		temperature: '−12°C',
+	},
+];
+---
+
+<SiteLayout>
+	<section class="hero" id="destinations" style={`--hero-image: url(https://images.unsplash.com/${destinations[0].image}?auto=format&fit=crop&w=2400&q=85)`}>
+		<div class="hero-grain" aria-hidden="true"></div>
+		<div class="hero-content">
+			<div class="eyebrow"><span class="eyebrow-dot"></span> THE UNIVERSE, A LITTLE CLOSER</div>
+			<p class="hero-kicker" data-kind>{destinations[0].kind}</p>
+			<h1>Somewhere<br />beyond <em>ordinary.</em></h1>
+			<p class="hero-description" data-description>{destinations[0].description}</p>
+			<a class="text-link" href="#field-notes">Start wandering <span aria-hidden="true">↘</span></a>
+		</div>
+		<div class="hero-caption"><span>01 / 03</span><span data-tag>{destinations[0].tag}</span></div>
+		<div class="hero-index" aria-label="Choose a destination">
+			{destinations.map((destination, index) => (
+				<button class="destination-button" type="button" data-destination={index} aria-pressed={index === 0}>
+					<span class="destination-number">0{index + 1}</span>
+					<span class="destination-name">{destination.name}</span>
+					<span class="destination-line" aria-hidden="true"></span>
+				</button>
+			))}
+		</div>
+		<div class="scroll-note" aria-hidden="true"><span></span> SCROLL TO EXPLORE</div>
+	</section>
+
+	<section class="field-notes" id="field-notes">
+		<div class="section-heading">
+			<div>
+				<p class="eyebrow section-eyebrow">A VERY SMALL SELECTION</p>
+				<h2>Worlds worth<br /><em>losing yourself in.</em></h2>
+			</div>
+			<p class="section-aside">Every dot has a story.<br />Here are three good places to begin.</p>
+		</div>
+		<div class="world-strip">
+			<article class="world-card">
+				<div class="world-number">01 <span>—</span> THE WATER WORLD</div>
+				<h3>Europa</h3>
+				<p>Jupiter's quiet moon keeps its best secret under a shell of ice.</p>
+				<a href="#destinations" class="world-link" data-select="0" aria-label="Explore Europa">EXPLORE <span aria-hidden="true">↗</span></a>
+			</article>
+			<article class="world-card">
+				<div class="world-number">02 <span>—</span> THE OTHER EARTH</div>
+				<h3>Titan</h3>
+				<p>Trade rain for methane and see the solar system in a new light.</p>
+				<a href="#destinations" class="world-link" data-select="1" aria-label="Explore Titan">EXPLORE <span aria-hidden="true">↗</span></a>
+			</article>
+			<article class="world-card">
+				<div class="world-number">03 <span>—</span> THE FAR SHORE</div>
+				<h3>Kepler-186f</h3>
+				<p>A distant red sunrise. An ocean of stars between here and there.</p>
+				<a href="#destinations" class="world-link" data-select="2" aria-label="Explore Kepler-186f">EXPLORE <span aria-hidden="true">↗</span></a>
+			</article>
+		</div>
+	</section>
+
+	<section class="closing-band">
+		<span class="closing-star" aria-hidden="true">✳</span>
+		<p>Before the stars, there was a beginning.</p>
+		<a href="/origins" class="text-link">Follow the story to here <span aria-hidden="true">↗</span></a>
+	</section>
+
+	<script define:vars={{ destinations }}>
+		const buttons = document.querySelectorAll('[data-destination]');
+		const hero = document.querySelector('.hero');
+		const kind = document.querySelector('[data-kind]');
+		const description = document.querySelector('[data-description]');
+		const tag = document.querySelector('[data-tag]');
+		const captionCount = document.querySelector('.hero-caption span:first-child');
+
+		function selectDestination(index) {
+			const destination = destinations[index];
+			if (!destination || !hero || !kind || !description || !tag || !captionCount) return;
+			hero.style.setProperty('--hero-image', `url(https://images.unsplash.com/${destination.image}?auto=format&fit=crop&w=2400&q=85)`);
+			kind.textContent = destination.kind;
+			description.textContent = destination.description;
+			tag.textContent = destination.tag;
+			captionCount.textContent = `0${index + 1} / 03`;
+			buttons.forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.destination) === index)));
+		}
+
+		buttons.forEach((button) => button.addEventListener('click', () => selectDestination(Number(button.dataset.destination))));
+		document.querySelectorAll('[data-select]').forEach((link) => {
+			link.addEventListener('click', () => selectDestination(Number(link.dataset.select)));
+		});
+	</script>
+</SiteLayout>
+
+<style>
+	.hero {
+		position: relative;
+		isolation: isolate;
+		display: flex;
+		min-height: min(790px, calc(100svh - 70px));
+		align-items: center;
+		overflow: hidden;
+		background: #151a18 var(--hero-image) center 47% / cover no-repeat;
+		transition: background-image 500ms ease;
+	}
+	.hero::before { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgb(12 16 14 / 83%) 0%, rgb(12 16 14 / 48%) 45%, rgb(12 16 14 / 7%) 100%), linear-gradient(0deg, #101311 0%, transparent 24%, transparent 72%, rgb(10 14 12 / 26%) 100%); content: ''; }
+	.hero-grain { position: absolute; z-index: -1; inset: 0; background: radial-gradient(ellipse at 72% 46%, transparent 12%, rgb(12 16 14 / 12%) 70%); pointer-events: none; }
+	.hero-content { width: min(1200px, 100%); margin: 0 auto; padding: 90px 8vw 120px; animation: arrive 800ms both; }
+	.eyebrow { display: flex; align-items: center; gap: 10px; color: #d2d8d1; font: 500 10px/1.4 var(--font-sans); letter-spacing: 2px; }
+	.eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 13px var(--lime); }
+	.hero-kicker { margin: 54px 0 13px; color: var(--lime); font: 500 10px/1.4 var(--font-sans); letter-spacing: 2px; }
+	h1, h2, h3, p { margin-top: 0; }
+	h1 { margin-bottom: 24px; color: #f0f0e9; font: 400 clamp(56px, 7.2vw, 104px)/.94 var(--font-serif); }
+	h1 em, h2 em { color: var(--lime); font-weight: 400; }
+	.hero-description { max-width: 405px; margin-bottom: 28px; color: #c2c8c1; font: 300 15px/1.75 var(--font-sans); }
+	.text-link { display: inline-flex; align-items: center; gap: 14px; color: #f0f0e9; font: 500 11px/1 var(--font-sans); text-decoration: none; }
+	.text-link span { color: var(--lime); font-size: 16px; transition: transform 180ms ease; }
+	.text-link:hover span { transform: translate(3px, 2px); }
+	.hero-caption { position: absolute; right: 8vw; bottom: 45px; display: flex; gap: 24px; color: #d2d8d1; font: 500 9px/1 var(--font-sans); letter-spacing: 1.6px; }
+	.hero-caption span:first-child { color: var(--lime); }
+	.hero-index { position: absolute; right: 8vw; bottom: 100px; display: flex; gap: 28px; }
+	.destination-button { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; align-items: center; min-width: 112px; padding: 0; border: 0; background: transparent; color: #d2d8d1; cursor: pointer; text-align: left; }
+	.destination-number { color: #c7cec6; font: 500 9px/1 var(--font-sans); }
+	.destination-name { font: 400 14px/1.2 var(--font-serif); }
+	.destination-line { grid-column: 1 / -1; height: 1px; margin-top: 10px; background: rgb(237 240 231 / 42%); transition: background 180ms ease, height 180ms ease; }
+	.destination-button[aria-pressed="true"] .destination-number, .destination-button[aria-pressed="true"] .destination-name { color: var(--lime); }
+	.destination-button[aria-pressed="true"] .destination-line { height: 2px; background: var(--lime); }
+	.destination-button:hover .destination-line { background: var(--lime); }
+	.scroll-note { position: absolute; bottom: 45px; left: 8vw; display: flex; align-items: center; gap: 10px; color: #b1bab2; font: 500 8px/1 var(--font-sans); letter-spacing: 1.8px; }
+	.scroll-note span { width: 24px; height: 1px; background: var(--lime); }
+	.field-notes { max-width: 1200px; margin: auto; padding: 110px 8vw 120px; }
+	.section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 64px; }
+	.section-eyebrow { margin-bottom: 22px; color: var(--lime); }
+	h2 { margin-bottom: 0; color: var(--paper); font: 400 clamp(42px, 5vw, 64px)/1.02 var(--font-serif); }
+	.section-aside { margin: 0 4% 5px 20px; color: #a4ada5; font: 300 13px/1.8 var(--font-sans); }
+	.world-strip { display: grid; grid-template-columns: repeat(3, 1fr); }
+	.world-card { position: relative; min-height: 220px; padding: 26px 26px 18px 0; border-top: 1px solid #454c45; }
+	.world-card + .world-card { padding-left: 28px; border-left: 1px solid #343a34; }
+	.world-number { margin-bottom: 29px; color: #9ba59b; font: 500 8px/1 var(--font-sans); letter-spacing: 1.5px; }
+	.world-number span { padding: 0 6px; color: var(--lime); }
+	h3 { margin-bottom: 10px; color: var(--paper); font: 400 31px/1 var(--font-serif); }
+	.world-card p { max-width: 255px; margin-bottom: 18px; color: #a4ada5; font: 300 12px/1.7 var(--font-sans); }
+	.world-link { display: inline-flex; align-items: center; gap: 8px; color: var(--lime); font: 500 9px/1 var(--font-sans); letter-spacing: 1.4px; text-decoration: none; }
+	.world-link span { transition: transform 180ms ease; }
+	.world-link:hover span { transform: translate(2px, -2px); }
+	.closing-band { display: flex; min-height: 225px; flex-direction: column; align-items: center; justify-content: center; border-top: 1px solid #343a34; background: #151a17; text-align: center; }
+	.closing-star { margin-bottom: 8px; color: var(--lime); font-size: 17px; }
+	.closing-band p { margin-bottom: 18px; color: var(--paper); font: 400 32px/1 var(--font-serif); }
+	.closing-band .text-link { color: #a4ada5; font-size: 10px; }
+	@keyframes arrive { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+	@media (max-width: 680px) {
+		.hero { min-height: min(760px, calc(100svh - 62px)); align-items: flex-start; background-position: 59% center; }
+		.hero::before { background: linear-gradient(90deg, rgb(12 16 14 / 76%), rgb(12 16 14 / 29%)), linear-gradient(0deg, #101311 0%, transparent 30%, rgb(10 14 12 / 25%) 100%); }
+		.hero-content { padding: 102px 7vw 220px; }
+		.hero-kicker { margin-top: 62px; }
+		h1 { font-size: clamp(58px, 14vw, 82px); }
+		.hero-description { max-width: 340px; font-size: 14px; }
+		.hero-index { right: 7vw; bottom: 92px; left: 7vw; gap: 16px; }
+		.destination-button { flex: 1; min-width: 0; gap: 0 7px; }
+		.destination-name { font-size: 13px; }
+		.hero-caption { right: 7vw; bottom: 39px; left: 7vw; justify-content: space-between; gap: 10px; font-size: 8px; }
+		.scroll-note { display: none; }
+		.field-notes { padding: 82px 7vw 90px; }
+		.section-heading { align-items: flex-start; flex-direction: column; gap: 20px; margin-bottom: 42px; }
+		.section-aside { margin-left: 0; }
+		.world-strip { grid-template-columns: 1fr; }
+		.world-card, .world-card + .world-card { min-height: 0; padding: 24px 0; border-left: 0; }
+		.world-number { margin-bottom: 20px; }
+		.world-card p { max-width: 320px; }
+	}
+</style>

@@ -1,0 +1,67 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout title="Our story — Farther" description="Meet the curious minds behind Farther, a field guide to the universe.">
+	<section class="about-hero">
+		<div class="about-hero-image" role="img" aria-label="Stars and nebulae in a distant galaxy"></div>
+		<div class="about-hero-copy">
+			<p class="eyebrow"><span class="eyebrow-dot"></span> THE PEOPLE BEHIND THE PERSPECTIVE</p>
+			<h1>Curiosity has<br />a <em>long</em> reach.</h1>
+			<p class="about-lede">We’re cartographers of the almost-impossible. We make the universe feel a little less like a number, and a little more like somewhere you might go.</p>
+		</div>
+		<p class="image-caption">THE HELIX NEBULA · 650 LIGHT YEARS FROM HOME</p>
+	</section>
+	<section class="about-body">
+		<div class="about-label"><span>01</span> A NOTE FROM THE CREW</div>
+		<div class="about-copy">
+			<h2>Space is enormous.<br /><em>Wonder is, too.</em></h2>
+			<div class="about-prose">
+				<p>Farther began with a question on a late-night train: what would it take to make the universe feel close enough to touch?</p>
+				<p>We’re a loose constellation of astronomers, storytellers, designers, and professional window-gazers. We turn real worlds and real science into journeys you can feel: the long blue drift toward Europa, the honey-colored haze of a Titan morning, a red sun rising over a planet a very long way from here.</p>
+				<p>Nothing here is quite a travel brochure. The distances are real; the daydreams are for everyone.</p>
+				<a class="text-link about-link" href="/">Back to the atlas <span aria-hidden="true">↗</span></a>
+			</div>
+		</div>
+	</section>
+	<section class="manifesto">
+		<div class="manifesto-number">02 <span>—</span> OUR NORTH STAR</div>
+		<p>“The universe is not a faraway place.<br />It’s a <em>point of view.</em>”</p>
+		<span class="manifesto-credit">— THE FARTHER FIELD NOTES</span>
+	</section>
+</SiteLayout>
+
+<style>
+	.about-hero { position: relative; display: flex; min-height: 580px; align-items: center; overflow: hidden; }
+	.about-hero-image { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(12 16 14 / 84%) 0%, rgb(12 16 14 / 44%) 55%, rgb(12 16 14 / 8%) 100%), linear-gradient(0deg, #101311, transparent 26%), url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=85') center 52% / cover; }
+	.about-hero-copy { position: relative; width: min(1200px, 100%); margin: 0 auto; padding: 95px 8vw 110px; animation: arrive 800ms both; }
+	.eyebrow { display: flex; align-items: center; gap: 10px; color: #d2d8d1; font: 500 10px/1.4 var(--font-sans); letter-spacing: 2px; }
+	.eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 13px var(--lime); }
+	h1, h2, p { margin-top: 0; }
+	h1 { margin: 56px 0 21px; color: var(--paper); font: 400 clamp(60px, 7vw, 94px)/.96 var(--font-serif); }
+	h1 em, h2 em, .manifesto p em { color: var(--lime); font-weight: 400; }
+	.about-lede { max-width: 430px; margin-bottom: 0; color: #c2c8c1; font: 300 14px/1.8 var(--font-sans); }
+	.image-caption { position: absolute; right: 8vw; bottom: 31px; margin: 0; color: #d2d8d1; font: 500 8px/1 var(--font-sans); letter-spacing: 1.5px; }
+	.about-body { display: grid; grid-template-columns: 1fr 2fr; gap: 7vw; max-width: 1200px; margin: auto; padding: 105px 8vw 115px; }
+	.about-label { color: #a4ada5; font: 500 9px/1.5 var(--font-sans); letter-spacing: 1.4px; }
+	.about-label span { margin-right: 12px; color: var(--lime); }
+	.about-copy { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+	h2 { margin: 0; color: var(--paper); font: 400 clamp(38px, 4.2vw, 54px)/1.03 var(--font-serif); }
+	.about-prose p { margin-bottom: 18px; color: #afb7af; font: 300 12px/1.9 var(--font-sans); }
+	.about-link { margin-top: 8px; color: var(--paper); font-size: 10px; }
+	.manifesto { display: flex; min-height: 300px; flex-direction: column; align-items: center; justify-content: center; padding: 70px 24px; border-top: 1px solid #343a34; background: #151a17; text-align: center; }
+	.manifesto-number { margin-bottom: 28px; color: #a4ada5; font: 500 8px/1 var(--font-sans); letter-spacing: 1.6px; }
+	.manifesto-number span { padding: 0 5px; color: var(--lime); }
+	.manifesto p { margin-bottom: 20px; color: var(--paper); font: 400 clamp(28px, 4vw, 48px)/1.14 var(--font-serif); }
+	.manifesto-credit { color: #a4ada5; font: 500 8px/1 var(--font-sans); letter-spacing: 1.5px; }
+	@keyframes arrive { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+	@media (max-width: 680px) {
+		.about-hero { min-height: 590px; align-items: flex-start; }
+		.about-hero-image { background-position: 58% center; }
+		.about-hero-copy { padding: 105px 7vw 115px; }
+		h1 { margin-top: 67px; font-size: clamp(60px, 14vw, 82px); }
+		.image-caption { right: 7vw; bottom: 29px; font-size: 7px; }
+		.about-body { grid-template-columns: 1fr; gap: 34px; padding: 78px 7vw 85px; }
+		.about-copy { grid-template-columns: 1fr; gap: 24px; }
+	}
+</style>
